@@ -3444,6 +3444,81 @@ For complex documents, create a font configuration macro:
 .P2
 .PP
 This ensures consistent font usage throughout your document.
+.PP
+.B "Creative Typography: Beyond Conventional Documents"
+.PP
+For the adventurous typographer, Plan 9's font system enables
+extraordinary creative possibilities that blur the lines between
+text, graphics, and system programming.
+.PP
+.B "Network Topology as Typography"
+.PP
+Consider using typography to visualize network connections:
+.P1
+\&.fp 9 NET NetworkSymbolFont
+\&.ft NET
+Network Map:
+┌─ 192.168.1.1 ─┐
+├─ 192.168.1.2 ─┤ ←→ Router ←→ Internet
+└─ 192.168.1.3 ─┘
+\&.ft P
+.P2
+.PP
+The visual structure directly represents network topology,
+where each "character" position corresponds to an addressable
+network node.
+.PP
+.B "Dynamic Documents: Streams as Typography"
+.PP
+Plan 9's "everything is a file" philosophy means your documents
+can incorporate live system data:
+.P1
+\&.sy cat /proc/*/status | awk '{print "Process:", $1, "→", $2}'
+\&.so /tmp/process_output.ms
+.P2
+.PP
+Your document becomes a live view of system state, where
+typography renders dynamic information streams.
+.PP
+.B "Mathematical Typography for System States"
+.PP
+Use mathematical symbols to represent computational concepts:
+.P1
+System State Equations:
+∀ process ∈ system: memory(process) = ∑ allocated_pages
+∃ optimal_schedule: latency = min(∀ possible_orderings)
+∇ load_balance = ∂(cpu_usage)/∂(time) across ∀ cores
+.P2
+.PP
+.B "The Meta-Typography Experiment"
+.PP
+Here's where Plan 9 becomes beautifully recursive - use typography
+to describe typography itself:
+.P1
+Font Definition Language:
+font(name) ::= ⟨height⟩ ⟨ascent⟩ ∑ subfont_ranges
+subfont(range) ::= ⟨start⟩ ⟨end⟩ ⟨bitmap_file⟩
+character(c) ::= bitmap[position(c)] ∧ metrics(c)
+.P2
+.PP
+The document describes its own rendering system using the
+symbols that system produces.
+.PP
+.B "Live Editing as Performance"
+.PP
+Advanced users can create "performative documents" where the
+act of editing becomes part of the content:
+.P1
+\&.de LIVE    \\e" Live editing macro
+\&.sy ed /net/tcp/0/data &
+\&This document is being edited in real-time.
+\&Network connections: \\n[connections]
+\&Current time: \\n[seconds]
+\&..
+.P2
+.PP
+The document becomes a performance where typography, networking,
+and time combine into living art.
 .sp 100
 .BP
 .fp 8 C CW

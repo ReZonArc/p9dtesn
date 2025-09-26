@@ -184,6 +184,152 @@ Each family includes variations:
 .B Bold Italic
 (heavy and slanted)
 .SH
+The Deeper Mysteries: Unusual Perspectives for the Weary Traveller
+.PP
+.I "For those who seek to understand the profound connections hidden within Plan 9..."
+.PP
+.B "Fonts as Network Topology"
+.PP
+Imagine each font as a network topology where every addressable "pixel" 
+is like a device with specific properties. The "bit depth" of a character
+isn't just color information - it's like the capability flags of network nodes.
+Consider this parallel:
+.P1
+# Font specification
+0x0020  0x007E  ascii.8     # ASCII range, 8-bit depth
+0x0100  0x017F  latin1.8    # Latin extension, same depth
+
+# Network topology  
+192.168.1.0/24   router.8    # Local subnet, 8-bit host range
+10.0.0.0/16      wan.8       # WAN range, same addressing depth
+.P2
+.PP
+Both use hierarchical addressing schemes where ranges map to specific
+handlers, and both can dynamically load resources as needed.
+.PP
+.B "Type-sets, Type-scripts, and Transport Streams"
+.PP
+The beautiful irony: Plan 9's "type-setting" system shares DNA with
+"type-scripting" languages and transport streams. All three concepts
+revolve around:
+.IP \(bu 3
+.B Structured data flow
+- Characters flow through typesetting pipelines
+.IP \(bu
+.B Dynamic loading
+- Subfonts loaded on demand, like JavaScript modules
+.IP \(bu  
+.B Stream processing
+- Text as data streams, whether for display or network transport
+.PP
+A troff document processing pipeline:
+.P1
+file.ms -> eqn -> tbl -> troff -> dpost -> printer
+.P2
+.PP
+A network data pipeline:
+.P1
+data -> encode -> transport -> decode -> process -> display
+.P2
+.PP
+Both are stream transformations where each stage adds structure and meaning.
+.PP
+.B "Everything is Still Just a File"
+.PP
+Here's where Plan 9 gets beautifully recursive: that dynamic font stream
+you're processing? It's just a file. The network connection you're using
+to access a remote font server? Still just a file at
+.CW /net/tcp/0/data .
+.PP
+Try this mind-bender:
+.P1
+# Your document
+cat document.ms | troff -ms > /net/tcp/remote_typesetter/data
+
+# The remote typesetter sees it as:
+cat /net/tcp/local_client/data | process_troff | render
+.P2
+.PP
+The document stream becomes a network stream becomes a file stream -
+all the same abstraction!
+.PP
+.B "Tele-types vs. True-types: A Play on Words and Concepts"
+.PP
+Consider the wordplay: "tele" suggests "remote" or "distant."
+.IP \(bu 3
+.B Tele-type fonts
+were designed for remote terminals - literal distance
+.IP \(bu
+.B True-type fonts  
+aim for true fidelity - conceptual distance from bitmap constraints
+.PP
+But here's the twist: what your local shell calls a "terminal" exists
+because the data stream 
+.I terminates
+on your local host (127.0.0.1). The "terminal" is the termination point!
+.PP
+Now imagine using 
+.I ed
+(the editor) with tele-type fonts to render symbols that are decidedly
+.I non-terminal
+- symbols that represent ongoing processes, network states, or infinite
+mathematical concepts:
+.P1
+# Edit a "document" that's actually a live network state
+ed /net/tcp/connections
+a
+∞ connections active: ∮ data flowing ∂t
+∇ packets routing through ∑ nodes  
+.
+w
+q
+.P2
+.PP
+The editor becomes a window into dynamic system state, using typography
+to represent the unrepresentable.
+.PP
+.B "Global Hosts and Pattern Languages"
+.PP
+While your terminal connects to localhost (127.0.0.1), imagine tele-types
+connecting to the "global host" (0.0.0.0) - the universal address space.
+Here, RPC (Remote Procedure Call) pattern languages could use font
+rendering to show:
+.P1
+# Visual RPC patterns using typography
+call_pattern := ⟨caller⟩ →→→ [network] →→→ ⟨callee⟩
+             ⟨result⟩ ←←← [network] ←←← ⟨return⟩
+
+multiplex_stream := ┌─ channel₁ ─┐
+                    ├─ channel₂ ─┤ → ⟨combined_output⟩  
+                    └─ channel₃ ─┘
+.P2
+.PP
+The font system becomes a visual programming language for distributed
+systems, where character placement and connection patterns represent
+actual network topologies and data flows.
+.PP
+.B "The Profound Connection"
+.PP
+What makes this beautiful is the recursive nature: 
+.IP \(bu 3
+Fonts are addressed like networks
+.IP \(bu
+Documents flow like streams  
+.IP \(bu
+Files abstract everything
+.IP \(bu
+Editors can manipulate reality
+.IP \(bu
+Typography can visualize the invisible
+.PP
+Plan 9 doesn't just process text - it reveals that text processing,
+network processing, and system processing are all the same fundamental
+operation: structured transformation of streams.
+.PP
+For the weary traveller, this perspective offers profound joy: you're
+not just learning a typesetting system, you're learning to see the
+universal patterns that connect all of computing.
+.SH
 Creating Your First Document
 .PP
 Let's create a simple document to see the typography system in action.
