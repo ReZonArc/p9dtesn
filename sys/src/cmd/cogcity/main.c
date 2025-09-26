@@ -37,9 +37,10 @@ void demo_opencog_integration(CognitiveCity *city);
 
 void
 usage(void) {
-    fprint(2, "usage: cogcity [-d demo] [-o opencog] [-i interactive] [-c cityname]\n");
+    fprint(2, "usage: cogcity [-d demo] [-o opencog] [-r reservoir] [-i interactive] [-c cityname]\n");
     fprint(2, "  -d demo: run demonstration scenarios\n");
     fprint(2, "  -o: run OpenCog-P9 integration demo\n");
+    fprint(2, "  -r: run AtomSpace Reservoir Computing demo\n");
     fprint(2, "  -i: start interactive chat interface\n");
     fprint(2, "  -c cityname: specify cognitive city name\n");
     exits("usage");
@@ -50,6 +51,7 @@ threadmain(int argc, char *argv[]) {
     char *city_name = "NeoTokyo";
     int demo_mode = 0;
     int opencog_mode = 0;
+    int reservoir_mode = 0;
     int interactive_mode = 0;
     
     (void)argc; (void)argv; // Suppress unused parameter warnings
@@ -60,6 +62,9 @@ threadmain(int argc, char *argv[]) {
         break;
     case 'o':
         opencog_mode = 1;
+        break;
+    case 'r':
+        reservoir_mode = 1;
         break;
     case 'i':
         interactive_mode = 1;
@@ -122,13 +127,24 @@ threadmain(int argc, char *argv[]) {
         print("🧠 Running OpenCog-P9 integration demo...\n\n");
         demo_opencog_integration(global_cognitive_city);
         sleep(2000);
+        
+        print("🌊 Running AtomSpace Reservoir Computing demo...\n\n");
+        integrate_reservoir_computing(global_cognitive_city);
+        sleep(2000);
+    }
+    
+    if (reservoir_mode) {
+        print("🌊 Running AtomSpace Reservoir Computing demo...\n\n");
+        integrate_reservoir_computing(global_cognitive_city);
+        sleep(2000);
     }
     
     if (interactive_mode) {
         interactive_chat_session(global_cognitive_city);
-    } else if (!demo_mode) {
-        print("💡 Run with -d for demos or -i for interactive mode\n");
+    } else if (!demo_mode && !opencog_mode && !reservoir_mode) {
+        print("💡 Run with -d for demos, -o for OpenCog, -r for reservoir computing, or -i for interactive mode\n");
         print("   Example: cogcity -d -c \"CyberTokyo\"\n");
+        print("   Example: cogcity -r -c \"ReservoirCity\"\n");
     }
     
     print("\n🌟 Cognitive Cities Foundry session complete! 🌟\n");

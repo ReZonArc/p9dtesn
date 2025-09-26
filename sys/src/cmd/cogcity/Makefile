@@ -11,7 +11,7 @@ TARGET = cogcity
 # Core cognitive cities sources
 CORE_SOURCES = main.c cogcity.c lexer.c y.tab.c plan9_compat.c
 # OpenCog-P9 integration sources
-OPENCOG_SOURCES = atomspace-service.c atom-core.c cognitive-agent.c goal-manager.c
+OPENCOG_SOURCES = atomspace-service.c atom-core.c cognitive-agent.c goal-manager.c reservoir-computing.c
 # All sources
 SOURCES = $(CORE_SOURCES) $(OPENCOG_SOURCES)
 OBJECTS = $(SOURCES:.c=.o)
@@ -53,6 +53,9 @@ cognitive-agent.o: cognitive-agent.c $(HEADERS)
 
 goal-manager.o: goal-manager.c $(HEADERS)
 	$(CC) $(CFLAGS) -c goal-manager.c
+
+reservoir-computing.o: reservoir-computing.c $(HEADERS)
+	$(CC) $(CFLAGS) -c reservoir-computing.c
 
 # Clean build artifacts
 clean:
