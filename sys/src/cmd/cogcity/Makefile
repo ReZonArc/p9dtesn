@@ -71,6 +71,10 @@ install: $(TARGET)
 demo: $(TARGET)
 	./$(TARGET) -d -c "CyberTokyo"
 
+# Reservoir computing demo target
+demo-reservoir: $(TARGET)
+	./$(TARGET) -r -c "ReservoirCityDemo"
+
 # OpenCog-P9 demo target
 demo-opencog: $(TARGET)
 	./$(TARGET) -o -c "OpenCogCity"
@@ -102,6 +106,7 @@ help:
 	@echo "  demo-safe - Build and run safe demo (no threading)"
 	@echo "  clean     - Remove build artifacts"
 	@echo "  demo      - Build and run demo mode"
+	@echo "  demo-reservoir - Build and run reservoir computing demo"
 	@echo "  demo-opencog  - Build and run OpenCog-P9 demo"
 	@echo "  interactive - Build and run interactive mode"
 	@echo "  help      - Show this help"
@@ -113,9 +118,10 @@ help:
 	@echo "  • Hopf fibration topology resolution"
 	@echo "  • YACC-based cognitive grammar parsing"
 	@echo "  • Interactive chat interface"
+	@echo "  • AtomSpace Reservoir Computing with Echo State Networks"
 	@echo "  • Distributed AGI agents as kernel-level entities"
 	@echo "  • AtomSpace as native filesystem service"
 	@echo "  • Goal-oriented autonomous reasoning"
 
-.PHONY: clean install demo demo-opencog interactive help all demo-safe
+.PHONY: clean install demo demo-reservoir demo-opencog interactive help all demo-safe
 .DEFAULT_GOAL := $(TARGET)
