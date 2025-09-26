@@ -1,7 +1,8 @@
 #include "cogcity.h"
+#include "opencog-p9-impl.h"
 
 /*
- * Cognitive Cities Foundry - Main Program
+ * Cognitive Cities Foundry + OpenCog-P9 - Main Program
  * Demonstrates the advanced distributed cognition system with:
  * - Tensor bundle channel multiplexing
  * - Namespace event loops with transformer activation
@@ -9,6 +10,9 @@
  * - Hopf fibration topology resolution
  * - YACC-based cognitive grammar
  * - Interactive chat interface
+ * - OpenCog AtomSpace as filesystem service
+ * - Autonomous cognitive agents
+ * - Distributed AGI federation
  */
 
 extern CognitiveCity *global_cognitive_city;
@@ -24,10 +28,18 @@ void demo_topology_resolution(CognitiveCity *city);
 void demo_zero_security_execution(CognitiveCity *city);
 void interactive_chat_session(CognitiveCity *city);
 
+/* OpenCog-P9 demos */
+extern void demo_atom_core(void);
+extern void demo_atomspace_service(void);
+extern void demo_cognitive_agent(void);
+extern void demo_goal_manager(void);
+void demo_opencog_integration(CognitiveCity *city);
+
 void
 usage(void) {
-    fprint(2, "usage: cogcity [-d demo] [-i interactive] [-c cityname]\n");
+    fprint(2, "usage: cogcity [-d demo] [-o opencog] [-i interactive] [-c cityname]\n");
     fprint(2, "  -d demo: run demonstration scenarios\n");
+    fprint(2, "  -o: run OpenCog-P9 integration demo\n");
     fprint(2, "  -i: start interactive chat interface\n");
     fprint(2, "  -c cityname: specify cognitive city name\n");
     exits("usage");
@@ -37,6 +49,7 @@ void
 threadmain(int argc, char *argv[]) {
     char *city_name = "NeoTokyo";
     int demo_mode = 0;
+    int opencog_mode = 0;
     int interactive_mode = 0;
     
     (void)argc; (void)argv; // Suppress unused parameter warnings
@@ -44,6 +57,9 @@ threadmain(int argc, char *argv[]) {
     ARGBEGIN {
     case 'd':
         demo_mode = 1;
+        break;
+    case 'o':
+        opencog_mode = 1;
         break;
     case 'i':
         interactive_mode = 1;
@@ -99,6 +115,12 @@ threadmain(int argc, char *argv[]) {
         sleep(2000);
         
         demo_zero_security_execution(global_cognitive_city);
+        sleep(2000);
+    }
+    
+    if (opencog_mode) {
+        print("🧠 Running OpenCog-P9 integration demo...\n\n");
+        demo_opencog_integration(global_cognitive_city);
         sleep(2000);
     }
     
@@ -383,4 +405,73 @@ interactive_chat_session(CognitiveCity *city) {
     }
     
     print("\n✅ Interactive session ended. Thank you for visiting %s!\n", city->city_name);
+}
+
+/*
+ * OpenCog-P9 Integration Demo
+ */
+void
+demo_opencog_integration(CognitiveCity *city) {
+    print("═══ 🧠 OPENCOG-P9 INTEGRATION ═══\n");
+    
+    /* Create AtomSpace service integrated with cognitive city */
+    AtomSpaceService *atomspace = create_atomspace_service("city_atomspace");
+    
+    /* Create cognitive agents within the city */
+    CognitiveAgent *researcher = create_cognitive_agent("City_Researcher", "researcher");
+    CognitiveAgent *planner = create_cognitive_agent("City_Planner", "planner");
+    
+    print("🏗️  Created OpenCog services within cognitive city framework\n");
+    
+    /* Populate knowledge relevant to the city */
+    Atom *intelligence = atomspace->add_atom(atomspace, CONCEPT_NODE, "artificial_intelligence", nil, 0);
+    Atom *cognition = atomspace->add_atom(atomspace, CONCEPT_NODE, "distributed_cognition", nil, 0);
+    Atom *planning = atomspace->add_atom(atomspace, CONCEPT_NODE, "urban_planning", nil, 0);
+    
+    /* Create relationships */
+    Atom *outgoing1[] = {cognition, intelligence};
+    atomspace->add_atom(atomspace, INHERITANCE_LINK, nil, outgoing1, 2);
+    
+    Atom *outgoing2[] = {planning, cognition};
+    atomspace->add_atom(atomspace, SIMILARITY_LINK, nil, outgoing2, 2);
+    
+    /* Set truth values */
+    TruthValue tv_high = {0.9, 0.8, 15.0};
+    atomspace->update_truth_value(atomspace, intelligence, &tv_high);
+    
+    print("📚 Populated city knowledge base with AI and planning concepts\n");
+    
+    /* Agent goal setting */
+    researcher->process_goal(researcher, "analyze cognitive city performance");
+    planner->process_goal(planner, "optimize city resource allocation");
+    
+    /* Inter-agent collaboration */
+    researcher->send_message(researcher, planner, "sharing performance analysis data");
+    planner->send_message(planner, researcher, "requesting optimization parameters");
+    
+    /* Reasoning about city operations */
+    researcher->reason_about(researcher, "how can we improve cognitive efficiency?");
+    planner->reason_about(planner, "what are the optimal resource distributions?");
+    
+    /* Integration with existing city tensor bundles */
+    print("🔗 Integrating OpenCog agents with tensor bundle channels...\n");
+    if (city->tensor_bundles[0]) {
+        print("  Agent cognitive states multiplexed through tensor bundle %d\n", 
+              city->tensor_bundles[0]->id);
+    }
+    
+    /* Show filesystem integration */
+    print("📁 OpenCog-P9 filesystem integration:\n");
+    print("  /proc/cognition/atomspace/concepts/artificial_intelligence/\n");
+    print("  /proc/cognition/agents/City_Researcher/goals/\n");
+    print("  /proc/cognition/agents/City_Planner/memory/\n");
+    
+    atomspace->serve_filesystem(atomspace);
+    
+    print("✅ OpenCog-P9 integration complete!\n");
+    print("   The cognitive city now has:\n");
+    print("   • AtomSpace knowledge representation\n");
+    print("   • Autonomous reasoning agents\n");
+    print("   • Goal-oriented planning\n");
+    print("   • Filesystem-based cognitive interface\n");
 }
