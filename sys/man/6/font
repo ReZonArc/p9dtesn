@@ -4,77 +4,229 @@ font, subfont \- external format for fonts and subfonts
 .SH SYNOPSIS
 .B #include <draw.h>
 .SH DESCRIPTION
-Fonts and subfonts are described in
-.IR cachechars (2).
+.B "Understanding Plan 9 Fonts"
 .PP
-External fonts are described by a plain text file that can be read using
-.IR openfont .
-The format of the file is a header followed by any number of
-subfont range specifications.
-The header contains two numbers: the height and the ascent, both in pixels.
-The height is the inter-line spacing and the ascent is the distance
-from the top of the line to the baseline.  These numbers are chosen
-to display consistently all the subfonts of the font.
-A subfont range specification contains two or three numbers and a file name.
-The numbers are the inclusive range of characters covered by the subfont,
-with an optional starting position within the subfont,
-and the file name names an external file suitable for
-.I readsubfont
-(see
-.IR graphics (2)).
-The minimum number of a covered range is mapped to the specified starting position
-(default zero) of the
-corresponding subfont.
-If the subfont file name does not begin with a slash, it is taken relative to the
-directory containing the font file.
-Each field must be followed by some white space.
-Each numeric field may be C-format decimal, octal, or hexadecimal.
+Plan 9 uses a sophisticated font system that combines multiple
+.I subfonts
+into complete
+.IR fonts .
+This allows for efficient handling of large character sets like
+Unicode while maintaining good performance and memory usage.
 .PP
-External subfonts are represented in a more rigid format
-that can be read and written using
-.I readsubfont
-and
-.I writesubfont
-(see
-.IR subfont (2)).
-The format for subfont files is: an image containing character glyphs,
-followed by a subfont header, followed by character information.
-The image has the format for external image files described in
-.IR image (6).
-The subfont header has 3
-decimal strings:
-.BR n ,
-.BR height ,
-and
-.BR ascent .
-Each number is right-justified and blank padded in 11 characters, followed by a blank.
-The character
-.B info
-consists of
-.BR n +1
-6-byte entries, each giving the
-.B Fontchar
+A font in Plan 9 consists of:
+.IP \(bu 3
+A main font file that describes the overall font properties
+.IP \(bu
+One or more subfont files containing the actual character images
+.IP \(bu
+Font metrics defining character spacing, height, and positioning
+.PP
+.B "Font File Format"
+.PP
+A font file is a plain text file that you can read and edit.
+It starts with a header containing two crucial numbers:
+.TP
+.B Height
+The total line spacing in pixels (distance between baselines of consecutive lines)
+.TP  
+.B Ascent
+The distance in pixels from the top of the line to the baseline
+.PP
+After the header come subfont range specifications, each describing
+a range of Unicode characters and which subfont file contains their images.
+.PP
+.B "Example Font File:"
+.PP
+Here's a simple font file structure:
+.P1
+18    14
+0x0000  0x00FF  ascii.9
+0x0100  0x017E  latin1.9  
+0x0386  0x03F5  greek.9
+.P2
+This means:
+.IP \(bu 3
+Line height is 18 pixels, ascent is 14 pixels
+.IP \(bu
+Characters 0x0000-0x00FF (basic ASCII) are in subfont "ascii.9"
+.IP \(bu
+Characters 0x0100-0x017E (Latin extensions) are in "latin1.9"
+.IP \(bu
+Characters 0x0386-0x03F5 (Greek) are in "greek.9"
+.PP
+.B "Subfont Range Specifications"
+.PP
+Each range specification contains:
+Each range specification contains:
+.IP "1." 4
+.B "Start character code"
+(the lowest Unicode value in this range)
+.IP "2."
+.B "End character code" 
+(the highest Unicode value in this range)  
+.IP "3."
+.B "Subfont filename"
+(which contains the actual character images)
+.IP "4."
+.B "Optional starting position"
+(where to begin reading in the subfont - defaults to 0)
+.PP
+The numbers are the inclusive range of characters covered by the subfont.
+If you specify a starting position, the minimum character number maps to that
+position in the subfont file.
+.PP
+.B "File Path Rules:"
+.IP \(bu 3
+If a subfont filename starts with '/', it's an absolute path
+.IP \(bu
+Otherwise, it's relative to the directory containing the font file
+.IP \(bu
+Use whitespace to separate all fields
+.IP \(bu
+Numbers can be decimal (42), octal (052), or hexadecimal (0x2A)
+.PP
+.B "Subfont File Format"
+.PP
+Subfont files contain the actual character images and are more complex binary files.
+Each subfont file contains:
+.IP "1." 4
+.B "Character image data" 
+- A bitmap image with all character glyphs side by side
+.IP "2."
+.B "Subfont header"
+- Three 11-character decimal fields: character count, height, ascent
+.IP "3."  
+.B "Character metrics"
+- For each character: position, dimensions, and spacing information
+.PP
+The subfont header format is exactly:
+.P1
+"%11d %11d %11d "
+.P2
+where the three numbers are:
+.TP
+.B n
+Number of characters in this subfont
+.TP
+.B height  
+Height of characters in pixels
+.TP
+.B ascent
+Ascent of characters in pixels
+.PP
+.B "Character Information Structure"
+.PP
+After the header comes character info for n+1 characters.
+Each entry is exactly 6 bytes:
+.IP \(bu 3
 .B x
-(2 bytes, low order byte first),
-.BR top ,
-.BR bottom ,
-.BR left ,
-and
-.BR width .
-The
-.B x
-field of the last
-.B Fontchar
-is used to calculate the image width
-of the previous character; the other fields in the last
-.B Fontchar
-are irrelevant.
+(2 bytes, low byte first) - horizontal position in image
+.IP \(bu  
+.B top
+(1 byte) - top edge relative to baseline
+.IP \(bu
+.B bottom  
+(1 byte) - bottom edge relative to baseline
+.IP \(bu
+.B left
+(1 byte) - left edge for character spacing
+.IP \(bu
+.B width
+(1 byte) - character width for spacing
 .PP
-Note that the convention of using the character with value zero (NUL) to represent
-characters of zero width (see
-.IR draw (2))
-means that fonts should have, as their zeroth character,
-one with non-zero width.
+The extra (n+1)th entry is used to calculate the image width of the
+last character - its other fields are ignored.
+.PP
+.B "Working with Zero-Width Characters"
+.PP
+Plan 9 uses a special convention: the character with value 0 (NUL) represents
+zero-width characters. This means fonts should have a character at position
+zero with non-zero width to serve as a replacement for truly missing characters.
+.PP
+.B "Common Font Directories"
+.PP
+Plan 9 organizes fonts in a standard hierarchy:
+.P1
+/lib/font/bit/     - Main font directory
+/lib/font/bit/lucidasans/   - Lucida Sans family
+/lib/font/bit/pelm/         - Pel family  
+/lib/font/bit/times/        - Times family
+.P2
+.PP
+.B "Creating Your Own Fonts"
+.PP
+To create a custom font:
+.IP "1." 4
+Create subfont files with your character images
+.IP "2."
+Write a font file listing the character ranges and subfont files
+.IP "3."
+Place files in the appropriate directory under /lib/font/bit/
+.IP "4."
+Test with programs like
+.IR page (1)
+or text editors
+.PP
+.B "Example: Simple Custom Font"
+.PP
+Let's say you want to create a custom font called "myfont" with 
+basic ASCII characters. Create this font file:
+.P1
+# /lib/font/bit/myfont/ascii.12.font
+16   12
+0x20  0x7E  ascii.12
+.P2
+This creates a font named "ascii.12.font" where:
+.IP \(bu 3
+Line height is 16 pixels, ascent is 12 pixels  
+.IP \(bu
+Characters 0x20-0x7E (printable ASCII) are in "ascii.12" subfont
+.PP
+.B "Font Naming Conventions"
+.PP
+Plan 9 uses systematic font naming:
+.P1
+/lib/font/bit/[family]/[variant].[size].[depth]
+.P2
+Where:
+.TP
+.B family
+Font family (lucidasans, times, etc.)
+.TP
+.B variant  
+Style variant (roman, italic, bold, etc.)
+.TP
+.B size
+Approximate character height in pixels
+.TP
+.B depth
+Bit depth (1 for monochrome, 8 for grayscale, etc.)
+.PP
+Examples:
+.P1
+lucidasans/unicode.8.font    - 8pt Lucida Sans Unicode
+times/italics.12.font        - 12pt Times Italic  
+pelm/japanese.16.font        - 16pt Japanese font
+.P2
+.PP
+.B "Troubleshooting Fonts"
+.PP
+.TP
+.B "Font not found"
+Check that font files are in the correct directory structure and
+that file permissions allow reading.
+.TP
+.B "Missing characters display as boxes"
+The character code is outside the ranges defined in your font file,
+or the specified subfont file doesn't exist.
+.TP
+.B "Incorrect character spacing"  
+Check the character metrics in your subfont files - the width and
+positioning values control how characters are spaced.
+.TP
+.B "Font looks wrong"
+Verify the height and ascent values in your font file header match
+the actual subfont character dimensions.
 .SH FILES
 .TF /lib/font/bit/*
 .TP

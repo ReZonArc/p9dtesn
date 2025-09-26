@@ -2991,6 +2991,132 @@ that re-order pages or process only a subset.
 .NH
 Device and Font Description Files
 .PP
+.B "Understanding the Plan 9 Font System"
+.PP
+Plan 9's font system is designed around the concept of device independence
+and Unicode support. Understanding how fonts work will help you create
+better-looking documents and troubleshoot font-related issues.
+.PP
+.B "The Big Picture"
+.PP
+When you run troff, several things happen behind the scenes:
+.IP "1." 4
+Troff reads device description files to learn about your output device
+.IP "2."
+It loads font description files for the fonts you're using
+.IP "3."
+It calculates character positions and spacing
+.IP "4."
+It outputs device-independent formatting commands
+.IP "5."
+A post-processor (like dpost) converts these to device-specific output
+.PP
+.B "Device Types and Selection"
+.PP
+Plan 9 supports several output device types:
+.TP
+.B utf
+The default device for Unicode PostScript output. This handles the full
+range of Unicode characters and is suitable for modern printers.
+.TP
+.B post
+Standard PostScript output without special Unicode processing.
+Good for basic documents with Western text.
+.TP
+.B 202
+Mergenthaler Linotron 202 phototypesetter (legacy device).
+.PP
+You select a device with the 
+.CW -T
+option:
+.P1
+troff -Tutf document.ms     # Unicode PostScript (default)
+troff -Tpost document.ms    # Standard PostScript  
+.P2
+.PP
+.B "How Font Selection Works"
+.PP
+Fonts in Plan 9 are organized hierarchically:
+.P1
+/sys/lib/troff/font/devutf/    - Device-specific font info
+/lib/font/bit/                 - Actual font bitmaps
+.P2
+.PP
+When you request a font (like .ft B for bold), troff:
+.IP "1." 4
+Looks up the font name in the device's font table
+.IP "2."
+Reads the font description file to get character widths and metrics
+.IP "3."
+Maps characters to the appropriate subfont files as needed
+.PP
+.B "Working with Multiple Fonts"
+.PP
+Unlike older typesetting systems, Plan 9 troff can use many fonts
+simultaneously. You can:
+.IP \(bu 3
+Switch fonts anywhere in your document with 
+.CW \ef
+escape sequences
+.IP \(bu
+Mount new fonts on the fly with the 
+.CW .fp
+request
+.IP \(bu
+Use Unicode characters directly without special escape sequences
+.PP
+Example of mixing fonts in a single paragraph:
+.P1
+Normal text \\f(CWmonospace text\\fP and \\f2italic text\\fP 
+and even \\f(Jpこんにちは\\fP (if you have Japanese fonts).
+.P2
+.PP
+.B "Common Font Problems and Solutions"
+.PP
+.TP
+.B "Font not found"
+Check that the font description file exists in
+.CW /sys/lib/troff/font/dev@name@/
+and that any referenced subfont files exist in
+.CW /lib/font/bit/ .
+.TP
+.B "Wrong character spacing"
+This usually means the character width tables in the font description
+file don't match the actual font metrics. Check the
+.CW unitwidth
+parameter in the device DESC file.
+.TP
+.B "Missing Unicode characters"
+Make sure you're using the 
+.CW utf
+device and that the appropriate subfont files contain your characters.
+Check the font file's range specifications.
+.TP
+.B "PostScript errors"
+If dpost fails, try the 
+.CW post
+device instead of 
+.CW utf ,
+or check that your PostScript interpreter supports the fonts being used.
+.PP
+.B "Creating Custom Font Configurations"
+.PP
+You can create custom font setups by:
+.IP "1." 4
+Copying an existing device directory (like 
+.CW devutf
+) to a new name
+.IP "2."
+Modifying the DESC file to reference your fonts
+.IP "3."
+Creating or modifying font description files
+.IP "4."
+Using 
+.CW "-T@newdevice@"
+to select your custom configuration
+.PP
+.B "Technical Details"
+.PP
 The parameters that describe a output device
 .I name
 are read
@@ -3171,6 +3297,228 @@ Point sizes are scaled linearly and rounded, so the width of
 .CW a
 will be 44 at size 10, 40 at size 9, 35 at size 8,
 and so on.
+.PP
+.B "Practical Font Examples and Tutorials"
+.PP
+Now that you understand the technical details, let's look at practical
+examples of working with fonts in troff documents.
+.PP
+.B "Basic Font Changes"
+.PP
+The most common font operations:
+.P1
+\&.ft R        \\e" Change to Roman (normal) font
+\&.ft I        \\e" Change to Italic  
+\&.ft B        \\e" Change to Bold
+\&.ft CW       \\e" Change to Constant Width (monospace)
+.P2
+.PP
+You can also change fonts inline with escape sequences:
+.P1
+Normal text \\efIitalic text\\efP and \\efBbold text\\efP.
+Here is \\ef(CWmonospace\\efP text.
+.P2
+.PP
+.B "Working with Font Sizes"
+.PP
+Change point sizes with the 
+.CW .ps
+request or 
+.CW \es
+escape:
+.P1
+\&.ps 12       \\e" Set 12-point type
+Large text here.
+\&.ps 8        \\e" Set 8-point type  
+Small text here.
+\&.ps          \\e" Return to previous size
+.P2
+.PP
+Inline size changes:
+.P1
+Normal \\es+2LARGE\\es-2 normal \\es-2small\\es+2 normal text.
+.P2
+.PP
+.B "Mounting and Using Custom Fonts"
+.PP
+Mount a font on a position (1-9) with the 
+.CW .fp
+request:
+.P1
+\&.fp 5 H Helvetica     \\e" Mount Helvetica as font H on position 5
+\&.ft H                 \\e" Switch to Helvetica
+This text is in Helvetica.
+\&.ft P                 \\e" Return to previous font
+.P2
+.PP
+.B "Unicode and International Characters"
+.PP
+Plan 9 troff handles Unicode directly. You can include characters
+by typing them directly (if your editor supports it) or using
+the 
+.CW \eN
+escape:
+.P1
+Direct: café, naïve, résumé
+Numeric: caf\\eN'233', na\\eN'239've, r\\eN'233sum\\eN'233'
+Math: α² + β² = γ²
+.P2
+.PP
+.B "Special Font Features"
+.PP
+Use the special font for mathematical symbols:
+.P1
+\&.ft S         \\e" Switch to special font
+∫ ∑ ∏ ∂ ∇      \\e" Integral, sum, product, partial, del
+\&.ft P         \\e" Return to previous
+.P2
+.PP
+.B "Font Mixing in Equations"
+.PP
+When using 
+.IR eqn (1),
+fonts mix automatically:
+.P1
+\&.EQ
+x sup 2 + y sup 2 = r sup 2
+\&.EN
+.P2
+renders with appropriate fonts for variables and operators.
+.PP
+.B "Troubleshooting Font Issues"
+.PP
+Common problems and solutions:
+.TP
+.B Font not mounting
+Check that the font description file exists:
+.P1
+ls /sys/lib/troff/font/devutf/H
+.P2
+If missing, either the font isn't installed or you're using the wrong name.
+.TP
+.B Characters appearing as boxes
+The font doesn't contain the character you're trying to use.
+Try a different font or check that subfonts are properly installed:
+.P1
+ls /lib/font/bit/lucidasans/
+.P2
+.TP
+.B Wrong character spacing
+The font metrics might be incorrect. Check the 
+.CW spacewidth
+and character width values in the font description file.
+.TP
+.B PostScript errors
+If 
+.I dpost
+fails, the font might not be available to your PostScript interpreter.
+Try using built-in PostScript fonts or ensure your custom fonts are
+properly installed.
+.PP
+.B "Creating Documents with Mixed Scripts"
+.PP
+Plan 9's Unicode support makes it easy to mix different writing systems:
+.P1
+\&.fp 6 J JapaneseFont
+\&.fp 7 A ArabicFont
+\&.fp 8 G GreekFont
+
+English text, then \\ef(Jpこんにちは\\efP (Japanese),
+\\ef(Gκαλημέρα\\efP (Greek), and \\ef(Aمرحبا\\efP (Arabic).
+.P2
+.PP
+.B "Advanced Font Configuration"
+.PP
+For complex documents, create a font configuration macro:
+.P1
+\&.de FO    \\e" Font setup macro
+\&.fp 1 R Times-Roman
+\&.fp 2 I Times-Italic  
+\&.fp 3 B Times-Bold
+\&.fp 4 BI Times-BoldItalic
+\&.fp 5 CW LucidaConsole
+\&.ps 11
+\&.vs 13
+\&..
+\&.FO       \\e" Call font setup
+.P2
+.PP
+This ensures consistent font usage throughout your document.
+.PP
+.B "Creative Typography: Beyond Conventional Documents"
+.PP
+For the adventurous typographer, Plan 9's font system enables
+extraordinary creative possibilities that blur the lines between
+text, graphics, and system programming.
+.PP
+.B "Network Topology as Typography"
+.PP
+Consider using typography to visualize network connections:
+.P1
+\&.fp 9 NET NetworkSymbolFont
+\&.ft NET
+Network Map:
+┌─ 192.168.1.1 ─┐
+├─ 192.168.1.2 ─┤ ←→ Router ←→ Internet
+└─ 192.168.1.3 ─┘
+\&.ft P
+.P2
+.PP
+The visual structure directly represents network topology,
+where each "character" position corresponds to an addressable
+network node.
+.PP
+.B "Dynamic Documents: Streams as Typography"
+.PP
+Plan 9's "everything is a file" philosophy means your documents
+can incorporate live system data:
+.P1
+\&.sy cat /proc/*/status | awk '{print "Process:", $1, "→", $2}'
+\&.so /tmp/process_output.ms
+.P2
+.PP
+Your document becomes a live view of system state, where
+typography renders dynamic information streams.
+.PP
+.B "Mathematical Typography for System States"
+.PP
+Use mathematical symbols to represent computational concepts:
+.P1
+System State Equations:
+∀ process ∈ system: memory(process) = ∑ allocated_pages
+∃ optimal_schedule: latency = min(∀ possible_orderings)
+∇ load_balance = ∂(cpu_usage)/∂(time) across ∀ cores
+.P2
+.PP
+.B "The Meta-Typography Experiment"
+.PP
+Here's where Plan 9 becomes beautifully recursive - use typography
+to describe typography itself:
+.P1
+Font Definition Language:
+font(name) ::= ⟨height⟩ ⟨ascent⟩ ∑ subfont_ranges
+subfont(range) ::= ⟨start⟩ ⟨end⟩ ⟨bitmap_file⟩
+character(c) ::= bitmap[position(c)] ∧ metrics(c)
+.P2
+.PP
+The document describes its own rendering system using the
+symbols that system produces.
+.PP
+.B "Live Editing as Performance"
+.PP
+Advanced users can create "performative documents" where the
+act of editing becomes part of the content:
+.P1
+\&.de LIVE    \\e" Live editing macro
+\&.sy ed /net/tcp/0/data &
+\&This document is being edited in real-time.
+\&Network connections: \\n[connections]
+\&Current time: \\n[seconds]
+\&..
+.P2
+.PP
+The document becomes a performance where typography, networking,
+and time combine into living art.
 .sp 100
 .BP
 .fp 8 C CW

@@ -51,90 +51,153 @@ Point	strsubfontwidth(Subfont *f, char *s)
 .B
 Font*	mkfont(Subfont *f, Rune min)
 .SH DESCRIPTION
+.B "Understanding Subfonts"
+.PP
+Subfonts are the building blocks of Plan 9's font system. While a complete
+.I font
+describes how to display all the characters you might need, a 
+.I subfont
+contains the actual bitmap images for a specific range of characters.
+.PP
+Think of it this way:
+.IP \(bu 3
+A 
+.B font
+is like a book's table of contents - it tells you where to find things
+.IP \(bu
+A
+.B subfont
+is like a chapter - it contains the actual content (character images)
+.PP
+This separation allows Plan 9 to efficiently handle large character sets like
+Unicode by loading only the character ranges you actually use.
+.PP
+.B "Subfont Structure"
+.PP
+Every subfont contains:
+.IP "1." 4
+.B "Character images"
+- A bitmap showing all characters side by side
+.IP "2."
+.B "Metrics data"  
+- Information about each character's size and positioning
+.IP "3."
+.B "Font properties"
+- Overall height, ascent, and character count
+.PP
 Subfonts are the components of fonts that hold the character images.
 A font comprises an array of subfonts; see
-.IR cachechars (2).
-A new
-.B Subfont
-is allocated and initialized with
-.IR allocsubfont .
-See
 .IR cachechars (2)
-for the meaning of
-.IR n ,
-.IR height ,
-.IR ascent ,
-and
-.IR info ,
-and the arrangement of characters in
-image
-.IR i .
-The
-.I name
-is used to identify the subfont in the subfont cache; see the descriptions
-.I lookupsubfont
-and
-.IR installsubfont
-.RI ( q.v. ).
-The appropriate fields of the returned
+for the detailed technical implementation.
+.PP
+.B "Creating and Managing Subfonts"
+.PP
 .B Subfont
-structure are set to
-the passed arguments, and the image is registered as a subfont
-with the graphics device
-.IR draw (3).
-.I Allocsubfont
-returns 0 on failure.
+is created and initialized with
+.IR allocsubfont .
+This function takes several parameters that define the subfont:
+.TP
+.B name
+Identifies the subfont in the cache system
+.TP
+.B n
+Number of characters in this subfont
+.TP
+.B height  
+Total character height in pixels
+.TP
+.B ascent
+Distance from top of character to baseline
+.TP
+.B info
+Array of character metrics (see
+.IR cachechars (2)
+for the 
+.B Fontchar
+structure)
+.TP
+.B i
+Image containing all character bitmaps
+.PP
+The function registers the image as a subfont with the graphics system and
+returns a pointer to the new
+.B Subfont
+structure, or 0 on failure.
+.PP
+.B "Memory Management"
 .PP
 .I Freesubfont
-frees a subfont and all its associated structure including the
-associated image.
+frees a subfont and all its associated structures, including the
+associated image. 
+.B Important:
 Since
-.I freesbufont
+.I freesubfont
 calls
 .I free
-on
-.BR f->info ,
-if
-.B f->info
-was not allocated by
+on the
+.BR f->info
+field, if this field was not allocated by
 .IR malloc (2)
-it should be zeroed before calling
-.IR subffree .
+(for example, if it points to static data), you should set it to zero 
+before calling
+.IR freesubfont
+to avoid memory corruption.
 .PP
-A number of subfonts are kept in external files.
-The convention for naming subfont files is:
-.IP
-.B /lib/font/bit/\fIname\fP/\fIclass\fP.\fIsize\fP.\fIdepth
-.PD
+.B "Subfont File Naming Convention"
 .PP
-where
-.I size
-is approximately the height in pixels of the lower case letters
-(without ascenders or descenders).
-If there is only one version of the subfont, the
-.BI \&. depth
-extension is elided.
-.I Class
-describes the range of runes encoded in the subfont:
+Subfont files follow a standard naming pattern:
+.P1
+/lib/font/bit/[fontname]/[class].[size][.depth]
+.P2
+.TP
+.B class
+Describes the character range: 
 .BR ascii ,
 .BR latin1 ,
 .BR greek ,
+.BR cyrillic ,
 etc.
+.TP
+.B size  
+Approximate height in pixels of lowercase letters (without ascenders/descenders)
+.TP
+.B depth
+Bit depth - omitted if there's only one version
 .PP
-Subfonts are cached within the program, so a subfont shared between fonts will be loaded only once.
+Examples:
+.P1
+/lib/font/bit/lucidasans/ascii.8     - 8pt ASCII characters
+/lib/font/bit/times/greek.12         - 12pt Greek characters  
+/lib/font/bit/pelm/kanji.16.1        - 16pt Kanji, 1-bit depth
+.P2
+.PP
+.B "Subfont Caching System"
+.PP
+Plan 9 implements an intelligent caching system for subfonts:
+.IP \(bu 3
+Subfonts shared between fonts are loaded only once
+.IP \(bu
+The cache stores subfonts by name for quick retrieval
+.IP \(bu
+Programs can explicitly manage the cache when needed
+.PP
 .I Installsubfont
 stores subfont
 .I f
-under the given
+in the cache under the given
 .IR name ,
-typically the file name from which it was read.
+typically the filename from which it was read.
+This makes the subfont available for future use without reloading.
+.PP
 .I Uninstallsubfont
-removes the subfont from the cache.
-Finally,
-.I lookupsubfont
-searches for  a subfont with the given
+removes the subfont from the cache, freeing the memory.
+Use this when you're sure the subfont won't be needed again.
+.PP
+.I Lookupsubfont
+searches the cache for a subfont with the given
 .I name
-in the cache and returns it, or nil if no such subfont exists.
+and returns it, or nil if not found.
+This is much faster than reading from disk.
 .PP
 .I Subfontname
 is used to locate subfonts given their names within the fonts.
@@ -204,18 +267,97 @@ in
 .BR f .
 .PP
 .I Mkfont
-takes as argument a
+takes a single
 .B Subfont
-.I s
-and returns a pointer to a 
-.B Font
-that maps the character images in
-.I s
-into the
-.B Runes
+.I f
+and creates a complete
+.B Font  
+that maps the character images in the subfont to Unicode values
+starting from
 .I min
-to
-.IB min + s ->n-1\f1.
+and extending to
+.IB min + f ->n-1\f1.
+This is useful for creating simple fonts from single subfonts.
+.SH EXAMPLES
+.B "Basic Subfont Operations:"
+.PP
+Load a subfont from disk:
+.P1
+Subfont *sf;
+sf = readsubfont(display, "ascii", fd, 1);
+if(sf == nil)
+    sysfatal("can't load subfont: %r");
+.P2
+.PP
+Create a subfont programmatically:
+.P1
+Fontchar info[128];
+Image *img;
+Subfont *sf;
+
+/* ... set up img and info ... */
+sf = allocsubfont("mysubfont", 128, 16, 12, info, img);
+installsubfont("mysubfont", sf);
+.P2
+.PP
+.B "Working with Subfont Cache:"
+.PP
+Check if a subfont is already cached:
+.P1
+Subfont *sf = lookupsubfont("ascii.12");
+if(sf == nil) {
+    /* Not cached, need to load it */
+    fd = open("/lib/font/bit/lucidasans/ascii.12", OREAD);
+    sf = readsubfont(display, "ascii.12", fd, 1);
+    close(fd);
+}
+.P2
+.PP
+Remove a subfont from cache when done:
+.P1
+uninstallsubfont(sf);
+freesubfont(sf);
+.P2
+.PP
+.B "Creating Simple Fonts:"
+.PP
+Convert a subfont to a complete font:
+.P1
+Subfont *sf;
+Font *font;
+
+sf = readsubfont(display, "ascii", fd, 1);
+font = mkfont(sf, 0x20);  /* Start at space character */
+/* Now you can use font with string(), etc. */
+.P2
+.PP
+.B "Direct Character Drawing:"
+.PP
+Draw text using subfont directly (useful in kernels):
+.P1
+Point p = Pt(10, 50);
+p = stringsubfont(screen, p, display->black, subfont, "Hello");
+.P2
+.PP
+Calculate text width before drawing:
+.P1
+Point size = strsubfontwidth(subfont, "Hello World");
+if(size.x > screenwidth)
+    print("Text too wide for screen\\n");
+.P2
+.PP
+.B "Error Handling:"
+.PP
+Always check for errors when working with subfonts:
+.P1
+Subfont *sf = readsubfont(display, name, fd, 1);
+if(sf == nil) {
+    fprint(2, "Failed to load subfont %s: %r\\n", name);
+    return -1;
+}
+/* Use subfont... */
+freesubfont(sf);
+.P2
 .SH FILES
 .TF /lib/font/bit
 .TP
