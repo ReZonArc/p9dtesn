@@ -1,0 +1,17 @@
+</$objtype/mkfile
+
+TARG=cogcity
+OFILES=\
+	main.$O\
+	cogcity.$O\
+	lexer.$O\
+	y.tab.$O\
+
+HFILES=\
+	cogcity.h\
+	y.tab.h\
+
+BIN=/$objtype/bin
+LIB=\
+	/sys/src/libthread/libthread.a\
+	/sys/src/libc/libc.a\
