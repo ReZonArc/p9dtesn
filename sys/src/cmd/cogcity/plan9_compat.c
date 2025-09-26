@@ -300,6 +300,7 @@ threadcreate(void (*fn)(void*), void *arg, int stack) {
     pthread_detach(thread);  // Don't wait for thread completion
 }
 
+#ifndef SAFE_DEMO
 int
 main(int argc, char *argv[]) {
     ARGC = argc;
@@ -307,6 +308,7 @@ main(int argc, char *argv[]) {
     threadmain(argc, argv);
     return 0;
 }
+#endif
 
 /* Memory allocation */
 void*

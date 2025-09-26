@@ -38,7 +38,7 @@ plan9_compat.o: plan9_compat.c plan9_compat.h
 
 # Clean build artifacts
 clean:
-	rm -f $(OBJECTS) $(TARGET) y.tab.c y.tab.h y.output
+	rm -f $(OBJECTS) $(TARGET) cogcity-safe demo_safe.o plan9_compat_safe.o y.tab.c y.tab.h y.output
 
 # Install (demo)
 install: $(TARGET)
@@ -50,6 +50,20 @@ install: $(TARGET)
 demo: $(TARGET)
 	./$(TARGET) -d -c "CyberTokyo"
 
+# Demo safe target
+demo-safe: cogcity-safe
+	./cogcity-safe
+
+# Safe version without complex threading
+cogcity-safe: demo_safe.o cogcity.o lexer.o y.tab.o plan9_compat_safe.o
+	$(CC) demo_safe.o cogcity.o lexer.o y.tab.o plan9_compat_safe.o -o cogcity-safe $(LDFLAGS)
+
+demo_safe.o: demo_safe.c $(HEADERS)
+	$(CC) $(CFLAGS) -c demo_safe.c
+
+plan9_compat_safe.o: plan9_compat.c plan9_compat.h
+	$(CC) $(CFLAGS) -DSAFE_DEMO -c plan9_compat.c -o plan9_compat_safe.o
+
 # Interactive target
 interactive: $(TARGET)
 	./$(TARGET) -i -c "NeoShanghai"
@@ -60,6 +74,7 @@ help:
 	@echo "====================================="
 	@echo "Targets:"
 	@echo "  all       - Build the cognitive cities system"
+	@echo "  demo-safe - Build and run safe demo (no threading)"
 	@echo "  clean     - Remove build artifacts"
 	@echo "  demo      - Build and run demo mode"
 	@echo "  interactive - Build and run interactive mode"
@@ -73,5 +88,5 @@ help:
 	@echo "  • YACC-based cognitive grammar parsing"
 	@echo "  • Interactive chat interface"
 
-.PHONY: clean install demo interactive help all
+.PHONY: clean install demo interactive help all demo-safe
 .DEFAULT_GOAL := $(TARGET)
