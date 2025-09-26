@@ -143,40 +143,61 @@ before calling
 .IR freesubfont
 to avoid memory corruption.
 .PP
-A number of subfonts are kept in external files.
-The convention for naming subfont files is:
-.IP
-.B /lib/font/bit/\fIname\fP/\fIclass\fP.\fIsize\fP.\fIdepth
-.PD
+.B "Subfont File Naming Convention"
 .PP
-where
-.I size
-is approximately the height in pixels of the lower case letters
-(without ascenders or descenders).
-If there is only one version of the subfont, the
-.BI \&. depth
-extension is elided.
-.I Class
-describes the range of runes encoded in the subfont:
+Subfont files follow a standard naming pattern:
+.P1
+/lib/font/bit/[fontname]/[class].[size][.depth]
+.P2
+.TP
+.B class
+Describes the character range: 
 .BR ascii ,
 .BR latin1 ,
 .BR greek ,
+.BR cyrillic ,
 etc.
+.TP
+.B size  
+Approximate height in pixels of lowercase letters (without ascenders/descenders)
+.TP
+.B depth
+Bit depth - omitted if there's only one version
 .PP
-Subfonts are cached within the program, so a subfont shared between fonts will be loaded only once.
+Examples:
+.P1
+/lib/font/bit/lucidasans/ascii.8     - 8pt ASCII characters
+/lib/font/bit/times/greek.12         - 12pt Greek characters  
+/lib/font/bit/pelm/kanji.16.1        - 16pt Kanji, 1-bit depth
+.P2
+.PP
+.B "Subfont Caching System"
+.PP
+Plan 9 implements an intelligent caching system for subfonts:
+.IP \(bu 3
+Subfonts shared between fonts are loaded only once
+.IP \(bu
+The cache stores subfonts by name for quick retrieval
+.IP \(bu
+Programs can explicitly manage the cache when needed
+.PP
 .I Installsubfont
 stores subfont
 .I f
-under the given
+in the cache under the given
 .IR name ,
-typically the file name from which it was read.
+typically the filename from which it was read.
+This makes the subfont available for future use without reloading.
+.PP
 .I Uninstallsubfont
-removes the subfont from the cache.
-Finally,
-.I lookupsubfont
-searches for  a subfont with the given
+removes the subfont from the cache, freeing the memory.
+Use this when you're sure the subfont won't be needed again.
+.PP
+.I Lookupsubfont
+searches the cache for a subfont with the given
 .I name
-in the cache and returns it, or nil if no such subfont exists.
+and returns it, or nil if not found.
+This is much faster than reading from disk.
 .PP
 .I Subfontname
 is used to locate subfonts given their names within the fonts.
@@ -246,18 +267,97 @@ in
 .BR f .
 .PP
 .I Mkfont
-takes as argument a
+takes a single
 .B Subfont
-.I s
-and returns a pointer to a 
-.B Font
-that maps the character images in
-.I s
-into the
-.B Runes
+.I f
+and creates a complete
+.B Font  
+that maps the character images in the subfont to Unicode values
+starting from
 .I min
-to
-.IB min + s ->n-1\f1.
+and extending to
+.IB min + f ->n-1\f1.
+This is useful for creating simple fonts from single subfonts.
+.SH EXAMPLES
+.B "Basic Subfont Operations:"
+.PP
+Load a subfont from disk:
+.P1
+Subfont *sf;
+sf = readsubfont(display, "ascii", fd, 1);
+if(sf == nil)
+    sysfatal("can't load subfont: %r");
+.P2
+.PP
+Create a subfont programmatically:
+.P1
+Fontchar info[128];
+Image *img;
+Subfont *sf;
+
+/* ... set up img and info ... */
+sf = allocsubfont("mysubfont", 128, 16, 12, info, img);
+installsubfont("mysubfont", sf);
+.P2
+.PP
+.B "Working with Subfont Cache:"
+.PP
+Check if a subfont is already cached:
+.P1
+Subfont *sf = lookupsubfont("ascii.12");
+if(sf == nil) {
+    /* Not cached, need to load it */
+    fd = open("/lib/font/bit/lucidasans/ascii.12", OREAD);
+    sf = readsubfont(display, "ascii.12", fd, 1);
+    close(fd);
+}
+.P2
+.PP
+Remove a subfont from cache when done:
+.P1
+uninstallsubfont(sf);
+freesubfont(sf);
+.P2
+.PP
+.B "Creating Simple Fonts:"
+.PP
+Convert a subfont to a complete font:
+.P1
+Subfont *sf;
+Font *font;
+
+sf = readsubfont(display, "ascii", fd, 1);
+font = mkfont(sf, 0x20);  /* Start at space character */
+/* Now you can use font with string(), etc. */
+.P2
+.PP
+.B "Direct Character Drawing:"
+.PP
+Draw text using subfont directly (useful in kernels):
+.P1
+Point p = Pt(10, 50);
+p = stringsubfont(screen, p, display->black, subfont, "Hello");
+.P2
+.PP
+Calculate text width before drawing:
+.P1
+Point size = strsubfontwidth(subfont, "Hello World");
+if(size.x > screenwidth)
+    print("Text too wide for screen\\n");
+.P2
+.PP
+.B "Error Handling:"
+.PP
+Always check for errors when working with subfonts:
+.P1
+Subfont *sf = readsubfont(display, name, fd, 1);
+if(sf == nil) {
+    fprint(2, "Failed to load subfont %s: %r\\n", name);
+    return -1;
+}
+/* Use subfont... */
+freesubfont(sf);
+.P2
 .SH FILES
 .TF /lib/font/bit
 .TP
