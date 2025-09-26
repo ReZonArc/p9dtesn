@@ -26,166 +26,233 @@ troff, nroff, dpost \- text formatting and typesetting
 ]
 .SH DESCRIPTION
 .I Troff
-formats text in the named
-.I files
-for
-printing on a typesetter,
-emitting a textual intermediate format called
-`typesetter-independent
-.I troff
-output',
-understood by programs such as
-.IR proof (1)
-and
-.IR lp (1),
-but also by a
-.I troff
-post-processor named
-.IR dpost ,
-which emits corresponding Postscript.
-Under
-.BR -f ,
-.I dpost
-also emits Postscript font definitions as needed.
-.I Nroff
-does the same as
-.IR troff ,
-but produces output suitable
-for typewriter-like devices,
-usually without further post-processing,
-but see
-.IR col (1).
+is Plan 9's powerful document formatting and typesetting system.
+It transforms plain text files with embedded formatting commands
+into beautifully typeset documents for printing or display.
 .PP
+.I Troff
+reads your text files and produces a device-independent intermediate
+format that describes exactly where each character should be placed,
+what font and size to use, and how to handle graphics.
+This intermediate output is then processed by device-specific programs:
+.IP \(bu 3
+.IR dpost
+converts troff output to PostScript for modern printers
+.IP \(bu
+.IR proof (1)
+displays formatted output on screen for previewing
+.IP \(bu
+.IR lp (1)
+handles the printing pipeline
+.PP
+.I Nroff
+is essentially the same program as troff, but optimized for
+typewriter-like output devices such as terminals and simple printers.
+On Plan 9, nroff is actually a shell script that calls troff with the
+.B -N
+option.
+.PP
+.B "Getting Started:"
+The simplest way to use troff is:
+.IP
+.B "troff myfile.ms | lp"
+.PP
+This processes 
+.B myfile.ms
+(which should contain text with troff formatting commands)
+and sends the result directly to your default printer.
+.PP
+.B "Basic Usage:"
 If no
 .I file
-argument is present, the standard input is read.
-An argument consisting of a single minus
+argument is present, troff reads from standard input.
+Use a single minus
 .RB ( - )
-is taken to be
-a file name corresponding to the standard input.
-The options are:
+to explicitly read from standard input when mixing with other files.
+.PP
+.B "Common Options:"
 .nr xx \w'\fL-m\f2name\ \ '
 .TP \n(xxu
-.BI -o list
-Print pages in the comma-separated
-.I list
-of numbers and ranges.
-A range
-.IB N - M
-means
-.I N
-through
-.IR M ;
-initial
-.BI - M
-means up to
-.IR M ;
-final
-.IB N -
-means from
-.I N
-to the end.
-.TP
-.BI -n N
-Number first generated page
-.IR N .
-.TP
 .BI -m name
-Process the macro file
+Load macro package
 .BI /sys/lib/tmac/tmac. name
-before the input
-.IR files .
-.TP
-.BI -r aN
-Set register
-.I a
-(one character name) to
-.IR N .
-.TP
-.B -i
-Read standard input after the input files are exhausted.
-.TP
-.B -q
-Invoke the simultaneous input-output mode of the
-.B rd
-request.
-.TP
-.B -N
-Produce output suitable for typewriter-like devices.
-.SS Typesetter devices (not \fL-N\fP) only
-.TP \n(xxu
-.B -a
-Send a printable
-textual
-approximation
-of the results to the standard output.
+before processing your files.
+.br
+Common packages: 
+.B -ms
+(manuscript macros), 
+.B -mm 
+(memo macros), 
+.B -man
+(manual page macros)
+.br
+Example: 
+.B "troff -ms mydoc.ms"
 .TP
 .BI -T dest
-Prepare output for typesetter
-.IR dest :
+Choose output device (default: 
+.BR utf ):
 .br
-.ns
-.RS
-.TP \w'\fL-TLatin1\ 'u
 .B -Tutf
-(The default.) PostScript printers with
-preprocessing to handle Unicode
-characters encoded in
-.SM UTF
-.PD0
-.TP
-.B -Tpost
-Regular PostScript printers
-.PD0
-.TP
+\- Unicode PostScript (recommended for modern printers)
+.br
+.B -Tpost 
+\- Standard PostScript
+.br
 .B -T202
-Mergenthaler Linotron 202
-.RE
-.PD
-.TP "\w'\fL-m\f2name 'u"
+\- Mergenthaler Linotron 202 typesetter
+.TP
+.B -a
+Preview mode: send readable text approximation to terminal
+instead of typesetter codes. Useful for quick document review.
+.br
+Example: 
+.B "troff -a mydoc.ms | less"
+.TP
+.BI -o list
+Print only specific pages. Use commas and ranges:
+.br
+.B "-o 1,3,5-7"
+prints pages 1, 3, and 5 through 7
+.br 
+.B "-o -3"
+prints pages 1 through 3
+.br
+.B "-o 5-"
+prints from page 5 to the end
+.PP
+.B "Advanced Options:"
+.TP
+.BI -n N
+Start page numbering at
+.IR N .
+Useful when printing document sections separately.
+.TP
+.BI -r aN
+Set number register
+.I a
+to value
+.IR N .
+Registers control document formatting variables.
+.br
+Example: 
+.B "-r P1"
+sets register P to 1 (useful for controlling page layout)
+.TP
+.B -i
+Continue reading from standard input after processing all files.
+Useful for interactive document building.
+.TP
+.B -q 
+Enable simultaneous input-output mode for the
+.B rd
+request (advanced feature for interactive documents).
+.TP
+.B -N
+Force typewriter output mode (same as calling nroff).
+Use this for terminal or simple printer output.
+.PP
+.B "Font and Typography Options:"
+.TP \n(xxu
 .BI -F dir
-Take font information from directory
-.IR dir .
-.SS Typewriter (\fL-N\fP) output only
+Look for font files in directory
+.I dir
+instead of the standard location
+.BR /sys/lib/troff/font .
+Useful when using custom fonts or testing new font installations.
+.PP
+.B "Terminal Output Options (nroff mode):"
+When using
+.B -N
+or calling
+.IR nroff ,
+these additional options are available:
 .TP \n(xxu
 .BI -s N
-Halt prior to every
+Pause every
 .I N
-pages (default
-.IR N =1)
-to allow paper loading or changing.
+pages (default 1) for paper changes or user interaction.
 .TP
 .BI -T name
-Prepare output for specified terminal.
-Known
-.I names
-include
-.B utf
-for the normal Plan 9
-.SM UTF
-encoding of the Unicode Standard character set (default),
-.B 37
-for the
-Teletype model 37,
-.B lp
-(`line-printer')
-for any terminal without half-line capability,
-.B 450
-for the \s-1DASI\s+1-450
-(Diablo Hyterm),
-and
-.B think
-(HP ThinkJet).
+Terminal type for nroff output:
+.br
+.B -Tutf
+\- Plan 9 UTF-8 encoding (default)
+.br
+.B -T37
+\- Teletype Model 37
+.br  
+.B -Tlp
+\- Line printer (no half-line capability)
+.br
+.B -T450
+\- DASI-450 (Diablo Hyterm)
+.br
+.B -Tthink
+\- HP ThinkJet
 .TP
 .B -e
-Produce equally-spaced words in adjusted
-lines, using full terminal resolution.
+Produce evenly-spaced words in justified lines using full terminal resolution.
 .TP
 .B -h
-Use output tabs during horizontal spacing
-to speed output and reduce output character count.
-Tab settings are assumed to be every
-8 nominal character widths.
+Use tabs for horizontal spacing to reduce output size and increase speed.
+Assumes tab stops every 8 character positions.
+.SH EXAMPLES
+.B "Simple Document Processing:"
+.IP
+Process a manuscript and send to printer:
+.br
+.B "troff -ms letter.ms | lp"
+.PP
+Preview a document on screen:
+.br
+.B "troff -ms -a report.ms | less"
+.PP
+Generate PostScript file:
+.br
+.B "troff -ms thesis.ms | dpost > thesis.ps"
+.PP
+.B "Working with Fonts:"
+.IP
+Use a specific font directory:
+.br
+.B "troff -F /usr/fonts -ms document.ms"
+.PP
+Process document with custom page numbering:
+.br
+.B "troff -ms -n 5 chapter2.ms | lp"
+.PP
+.B "Terminal Output:"
+.IP
+Format for terminal viewing:
+.br
+.B "nroff -ms memo.ms | less"
+.PP
+Format with specific terminal type:
+.br
+.B "nroff -Tlp -ms document.ms > document.txt"
+.PP
+.B "Batch Processing:"
+.IP
+Print specific pages only:
+.br
+.B "troff -ms -o 1,5-10 manual.ms | lp"
+.PP
+Process multiple chapters with continuous numbering:
+.br
+.B "troff -ms ch1.ms ch2.ms ch3.ms | lp"
+.PP
+.B "Advanced Usage:"
+.IP
+Set custom variables and process:
+.br
+.B "troff -ms -r P1 -r L66 document.ms"
+.PP
+Interactive document building:
+.br
+.B "troff -ms template.ms -i"
+.br
+(Then type additional troff commands interactively)
 .SH FILES
 .TF /sys/lib/troff/term/*
 .TP

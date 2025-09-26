@@ -51,55 +51,97 @@ Point	strsubfontwidth(Subfont *f, char *s)
 .B
 Font*	mkfont(Subfont *f, Rune min)
 .SH DESCRIPTION
+.B "Understanding Subfonts"
+.PP
+Subfonts are the building blocks of Plan 9's font system. While a complete
+.I font
+describes how to display all the characters you might need, a 
+.I subfont
+contains the actual bitmap images for a specific range of characters.
+.PP
+Think of it this way:
+.IP \(bu 3
+A 
+.B font
+is like a book's table of contents - it tells you where to find things
+.IP \(bu
+A
+.B subfont
+is like a chapter - it contains the actual content (character images)
+.PP
+This separation allows Plan 9 to efficiently handle large character sets like
+Unicode by loading only the character ranges you actually use.
+.PP
+.B "Subfont Structure"
+.PP
+Every subfont contains:
+.IP "1." 4
+.B "Character images"
+- A bitmap showing all characters side by side
+.IP "2."
+.B "Metrics data"  
+- Information about each character's size and positioning
+.IP "3."
+.B "Font properties"
+- Overall height, ascent, and character count
+.PP
 Subfonts are the components of fonts that hold the character images.
 A font comprises an array of subfonts; see
-.IR cachechars (2).
-A new
-.B Subfont
-is allocated and initialized with
-.IR allocsubfont .
-See
 .IR cachechars (2)
-for the meaning of
-.IR n ,
-.IR height ,
-.IR ascent ,
-and
-.IR info ,
-and the arrangement of characters in
-image
-.IR i .
-The
-.I name
-is used to identify the subfont in the subfont cache; see the descriptions
-.I lookupsubfont
-and
-.IR installsubfont
-.RI ( q.v. ).
-The appropriate fields of the returned
+for the detailed technical implementation.
+.PP
+.B "Creating and Managing Subfonts"
+.PP
 .B Subfont
-structure are set to
-the passed arguments, and the image is registered as a subfont
-with the graphics device
-.IR draw (3).
-.I Allocsubfont
-returns 0 on failure.
+is created and initialized with
+.IR allocsubfont .
+This function takes several parameters that define the subfont:
+.TP
+.B name
+Identifies the subfont in the cache system
+.TP
+.B n
+Number of characters in this subfont
+.TP
+.B height  
+Total character height in pixels
+.TP
+.B ascent
+Distance from top of character to baseline
+.TP
+.B info
+Array of character metrics (see
+.IR cachechars (2)
+for the 
+.B Fontchar
+structure)
+.TP
+.B i
+Image containing all character bitmaps
+.PP
+The function registers the image as a subfont with the graphics system and
+returns a pointer to the new
+.B Subfont
+structure, or 0 on failure.
+.PP
+.B "Memory Management"
 .PP
 .I Freesubfont
-frees a subfont and all its associated structure including the
-associated image.
+frees a subfont and all its associated structures, including the
+associated image. 
+.B Important:
 Since
-.I freesbufont
+.I freesubfont
 calls
 .I free
-on
-.BR f->info ,
-if
-.B f->info
-was not allocated by
+on the
+.BR f->info
+field, if this field was not allocated by
 .IR malloc (2)
-it should be zeroed before calling
-.IR subffree .
+(for example, if it points to static data), you should set it to zero 
+before calling
+.IR freesubfont
+to avoid memory corruption.
 .PP
 A number of subfonts are kept in external files.
 The convention for naming subfont files is:
