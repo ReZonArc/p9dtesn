@@ -77,7 +77,38 @@ This will run through all the cognitive cities capabilities including:
 - Zero-security execution
 - Interactive cognitive interface simulation
 
-## 🧠 Cognitive Grammar
+## 🌊 AtomSpace Reservoir Computing
+
+The system now includes a sophisticated reservoir computing implementation using Echo State Networks (ESN) integrated with the AtomSpace. This enables cognitive pattern processing and prediction using reservoir dynamics.
+
+### Echo State Network Features
+
+- **Configurable Architecture**: Input size, reservoir size, output size, spectral radius
+- **Reservoir Dynamics**: Recurrent neural network with leaky integration
+- **Training Capability**: Linear regression for output weight optimization
+- **AtomSpace Integration**: Direct processing of cognitive atoms and patterns
+- **Pattern Recognition**: Learning from atom interactions and relationships
+
+### Usage Examples
+
+```bash
+# Run reservoir computing demo
+./cogcity -r -c "ReservoirCity"
+
+# Build and run reservoir demo
+make demo-reservoir
+
+# OpenCog integration with reservoir computing
+./cogcity -o -c "OpenCogCity"
+```
+
+### Implementation Details
+
+- **Input Encoding**: Atoms encoded as feature vectors (type, outgoing count, truth values, attention values)
+- **Reservoir State**: 50-neuron recurrent network with spectral radius control
+- **Training**: Learn from AtomSpace interactions to predict atom behavior
+- **Prediction**: Generate predictions for atom state evolution and relationships
+
 
 The system uses a YACC-based grammar for natural language interaction:
 

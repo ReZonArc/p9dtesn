@@ -563,3 +563,68 @@ start_cognitive_chat(CognitiveCity *city) {
     // This would typically run in its own thread
     // For demo purposes, we'll show the interface setup
 }
+
+/* Reservoir Computing Integration */
+void
+integrate_reservoir_computing(CognitiveCity *city) {
+    if (!city) return;
+    
+    print("🧠 Integrating Reservoir Computing with %s\n", city->city_name);
+    
+    /* Create AtomSpace for reservoir computing */
+    AtomSpaceService *atomspace = create_atomspace_service("CityAtomSpace");
+    
+    /* Add some demo atoms to the atomspace */
+    TruthValue *tv1 = mallocz(sizeof(TruthValue), 1);
+    tv1->strength = 0.8;
+    tv1->confidence = 0.9;
+    
+    TruthValue *tv2 = mallocz(sizeof(TruthValue), 1);
+    tv2->strength = 0.6;
+    tv2->confidence = 0.7;
+    
+    /* Create some concept nodes */
+    Atom *concept1 = atomspace->add_atom(atomspace, CONCEPT_NODE, "intelligence", nil, 0);
+    Atom *concept2 = atomspace->add_atom(atomspace, CONCEPT_NODE, "learning", nil, 0);
+    Atom *concept3 = atomspace->add_atom(atomspace, CONCEPT_NODE, "reasoning", nil, 0);
+    
+    if (concept1) concept1->tv = tv1;
+    if (concept2) concept2->tv = tv2;
+    
+    /* Create inheritance links */
+    Atom **outgoing1 = mallocz(sizeof(Atom*) * 2, 1);
+    outgoing1[0] = concept2;  /* learning */
+    outgoing1[1] = concept1;  /* intelligence */
+    
+    Atom **outgoing2 = mallocz(sizeof(Atom*) * 2, 1);
+    outgoing2[0] = concept3;  /* reasoning */
+    outgoing2[1] = concept1;  /* intelligence */
+    
+    Atom *inheritance1 = atomspace->add_atom(atomspace, INHERITANCE_LINK, nil, outgoing1, 2);
+    Atom *inheritance2 = atomspace->add_atom(atomspace, INHERITANCE_LINK, nil, outgoing2, 2);
+    
+    if (inheritance1) {
+        TruthValue *tv_inh1 = mallocz(sizeof(TruthValue), 1);
+        tv_inh1->strength = 0.9;
+        tv_inh1->confidence = 0.8;
+        inheritance1->tv = tv_inh1;
+    }
+    
+    if (inheritance2) {
+        TruthValue *tv_inh2 = mallocz(sizeof(TruthValue), 1);
+        tv_inh2->strength = 0.85;
+        tv_inh2->confidence = 0.75;
+        inheritance2->tv = tv_inh2;
+    }
+    
+    print("  Created AtomSpace with %d atoms\n", atomspace->atom_count);
+    
+    /* Run the reservoir computing demo */
+    demo_atomspace_reservoir_computing(atomspace);
+    
+    print("✅ Reservoir Computing integration completed\n");
+    
+    /* Cleanup */
+    free(outgoing1);
+    free(outgoing2);
+}

@@ -170,4 +170,8 @@ void execute_in_zero_security_env(CognitiveCity *city, char *command);
 /* Interactive chat system */
 void start_cognitive_chat(CognitiveCity *city);
 
+/* Reservoir Computing Integration */
+#include "reservoir-computing.h"
+void integrate_reservoir_computing(CognitiveCity *city);
+
 extern CognitiveCity *global_cognitive_city;

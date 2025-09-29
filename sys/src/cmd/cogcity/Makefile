@@ -11,7 +11,7 @@ TARGET = cogcity
 # Core cognitive cities sources
 CORE_SOURCES = main.c cogcity.c lexer.c y.tab.c plan9_compat.c
 # OpenCog-P9 integration sources
-OPENCOG_SOURCES = atomspace-service.c atom-core.c cognitive-agent.c goal-manager.c
+OPENCOG_SOURCES = atomspace-service.c atom-core.c cognitive-agent.c goal-manager.c reservoir-computing.c
 # All sources
 SOURCES = $(CORE_SOURCES) $(OPENCOG_SOURCES)
 OBJECTS = $(SOURCES:.c=.o)
@@ -54,6 +54,9 @@ cognitive-agent.o: cognitive-agent.c $(HEADERS)
 goal-manager.o: goal-manager.c $(HEADERS)
 	$(CC) $(CFLAGS) -c goal-manager.c
 
+reservoir-computing.o: reservoir-computing.c $(HEADERS)
+	$(CC) $(CFLAGS) -c reservoir-computing.c
+
 # Clean build artifacts
 clean:
 	rm -f $(OBJECTS) $(TARGET) cogcity-safe demo_safe.o plan9_compat_safe.o y.tab.c y.tab.h y.output opencog-demo
@@ -67,6 +70,10 @@ install: $(TARGET)
 # Demo target
 demo: $(TARGET)
 	./$(TARGET) -d -c "CyberTokyo"
+
+# Reservoir computing demo target
+demo-reservoir: $(TARGET)
+	./$(TARGET) -r -c "ReservoirCityDemo"
 
 # OpenCog-P9 demo target
 demo-opencog: $(TARGET)
@@ -99,6 +106,7 @@ help:
 	@echo "  demo-safe - Build and run safe demo (no threading)"
 	@echo "  clean     - Remove build artifacts"
 	@echo "  demo      - Build and run demo mode"
+	@echo "  demo-reservoir - Build and run reservoir computing demo"
 	@echo "  demo-opencog  - Build and run OpenCog-P9 demo"
 	@echo "  interactive - Build and run interactive mode"
 	@echo "  help      - Show this help"
@@ -110,9 +118,10 @@ help:
 	@echo "  • Hopf fibration topology resolution"
 	@echo "  • YACC-based cognitive grammar parsing"
 	@echo "  • Interactive chat interface"
+	@echo "  • AtomSpace Reservoir Computing with Echo State Networks"
 	@echo "  • Distributed AGI agents as kernel-level entities"
 	@echo "  • AtomSpace as native filesystem service"
 	@echo "  • Goal-oriented autonomous reasoning"
 
-.PHONY: clean install demo demo-opencog interactive help all demo-safe
+.PHONY: clean install demo demo-reservoir demo-opencog interactive help all demo-safe
 .DEFAULT_GOAL := $(TARGET)
